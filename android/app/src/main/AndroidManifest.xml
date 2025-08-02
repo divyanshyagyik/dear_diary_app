@@ -30,6 +30,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-6722641929342110~5197357833"/>
+        <meta-data
+            android:name="com.razorpay.ApiKey"
+            android:value="rzp_test_Z7NclbqzTLR8o5"/>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

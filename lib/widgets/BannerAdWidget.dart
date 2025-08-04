@@ -1,9 +1,7 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/AdMobService.dart';
-import 'package:flutter/material.dart';
-
 import '../services/payment_service.dart';
 
 class BannerAdWidget extends StatefulWidget {
@@ -14,40 +12,66 @@ class BannerAdWidget extends StatefulWidget {
 class _BannerAdWidgetState extends State<BannerAdWidget> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
+  bool _isLoading = false;
   final PaymentService _paymentService = Get.find();
 
   @override
   void initState() {
     super.initState();
-    _checkAdStatus();
-    //_loadBannerAd();
+    _initializeAd();
   }
 
-  Future<void> _checkAdStatus() async {
-    final hasNoAds = await _paymentService.hasNoAds();
-    if (!hasNoAds) {
+  void _initializeAd() {
+    if (_paymentService.subscriptionStatus.value != SubscriptionStatus.active) {
       _loadBannerAd();
     }
   }
 
   void _loadBannerAd() {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    _bannerAd?.dispose();
+
     _bannerAd = BannerAd(
       adUnitId: AdMobService.getBannerAdId(),
       request: AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          print('Banner Ad loaded');
-          setState(() => _isLoaded = true);
+          print('Ad loaded successfully');
+          setState(() {
+            _isLoaded = true;
+            _isLoading = false;
+          });
         },
         onAdFailedToLoad: (ad, error) {
-          print('Banner Ad failed to load: $error');
+          print('Ad failed to load: ${error.message} [${error.code}]');
           ad.dispose();
-          // Retry after 30 seconds
-          Future.delayed(Duration(seconds: 30), _loadBannerAd);
+          setState(() => _isLoading = false);
+
+          // Retry with exponential backoff
+          final delay = _calculateRetryDelay(error.code);
+          print('Retrying in $delay seconds...');
+          Future.delayed(Duration(seconds: delay), _loadBannerAd);
         },
       ),
     )..load();
+  }
+
+  int _calculateRetryDelay(int errorCode) {
+    // Handle different error codes
+    switch (errorCode) {
+      case 3: // No fill
+        return 60;
+      case 2: // Network error
+        return 30;
+      case 1: // Invalid request
+        return 300; // Longer delay for configuration issues
+      default:
+        return 30;
+    }
   }
 
   @override
@@ -58,20 +82,32 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _paymentService.hasNoAds(),
-      builder: (context, snapshot) {
-        if (snapshot.data == true) {
-          return SizedBox.shrink(); // Hide ads if subscribed
-        }
-        return _isLoaded
-            ? Container(
+    return Obx(() {
+      // Hide ads for premium users
+      if (_paymentService.subscriptionStatus.value == SubscriptionStatus.active) {
+        return SizedBox.shrink();
+      }
+
+      // Show loading indicator
+      if (_isLoading) {
+        return Container(
+          height: AdSize.banner.height.toDouble(),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      // Show loaded ad
+      if (_isLoaded) {
+        return Container(
           width: _bannerAd!.size.width.toDouble(),
           height: _bannerAd!.size.height.toDouble(),
+          alignment: Alignment.center,
           child: AdWidget(ad: _bannerAd!),
-        )
-            : Container(height: 50);
-      },
-    );
+        );
+      }
+
+      // Default empty container
+      return Container(height: AdSize.banner.height.toDouble());
+    });
   }
 }

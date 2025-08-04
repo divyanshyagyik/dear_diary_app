@@ -17,6 +17,7 @@ class HomePage extends StatelessWidget {
     _authController.firebaseUser.value ?? Get.offAll(() => SignInPage());
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Color(0xFFFFE5B4),
         title: const Text('My Diary'),
         actions: [
           PopupMenuButton(
@@ -26,8 +27,8 @@ class HomePage extends StatelessWidget {
             ),
             itemBuilder:
                 (context) => [
-                  PopupMenuItem(child: Text('Logout'), value: 'logout'),
-                ],
+              PopupMenuItem(child: Text('Logout'), value: 'logout'),
+            ],
             onSelected: (value) async {
               if (value == 'logout') {
                 await _authController.signOut();
@@ -45,7 +46,17 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(children: [Expanded(child: _buildEntriesList()),BannerAdWidget(),]),
+      body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFFFE5B4), Color(0xFF093952)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Column(children: [Expanded(child: _buildEntriesList()),BannerAdWidget(),]
+          )
+      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () => Get.to(() => EntryEditPage()),
@@ -64,6 +75,7 @@ class HomePage extends StatelessWidget {
         itemBuilder: (context, index) {
           final entry = _diaryController.entries[index];
           return Card(
+            elevation: 4,
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: ListTile(
               leading: Text(
@@ -79,4 +91,4 @@ class HomePage extends StatelessWidget {
       );
     });
   }
-}
+} 

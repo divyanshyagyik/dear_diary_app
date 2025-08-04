@@ -46,3 +46,4 @@ class DiaryEntry {
     return '😢';
   }
 }
+

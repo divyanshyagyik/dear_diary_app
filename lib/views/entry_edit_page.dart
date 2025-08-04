@@ -25,7 +25,9 @@ class _EntryEditPageState extends State<EntryEditPage> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.entry?.title ?? '');
-    _contentController = TextEditingController(text: widget.entry?.content ?? '');
+    _contentController = TextEditingController(
+      text: widget.entry?.content ?? '',
+    );
     _selectedDate = widget.entry?.date ?? DateTime.now();
   }
 
@@ -33,61 +35,85 @@ class _EntryEditPageState extends State<EntryEditPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Color(0xFFFFE5B4),
         title: Text(widget.entry == null ? 'New Entry' : 'Edit Entry'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveEntry,
-          ),
+          ElevatedButton(onPressed: _saveEntry, child: Text("Save")),
+          SizedBox(width: 10)
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: TextField(
-                controller: _contentController,
-                decoration: const InputDecoration(
-                  labelText: 'Content',
-                  border: OutlineInputBorder(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFFFE5B4), Color(0xFF093952)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(22.0),
+          child: Column(
+            children: [
+              Card(
+                elevation: 4,
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Title',
+                          //border: OutlineInputBorder(),
+                          border: InputBorder.none
+                        ),
+                      ),
                 ),
-                maxLines: null,
-                expands: true,
-                keyboardType: TextInputType.multiline,
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
-                TextButton(
-                  child: const Text('Change Date'),
-                  onPressed: () async {
-                    final pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime.now(),
-                    );
-                    if (pickedDate != null) {
-                      setState(() {
-                        _selectedDate = pickedDate;
-                      });
-                    }
-                  },
+              const SizedBox(height: 16),
+              Expanded(
+                child: Card(
+                  elevation: 8,
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: _contentController,
+                      decoration: const InputDecoration(
+                        labelText: 'Content',
+                        //border: OutlineInputBorder(),
+                        border: InputBorder.none
+                      ),
+                      maxLines: null,
+                      expands: true,
+                      keyboardType: TextInputType.multiline,
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
+                  TextButton(
+                    child: const Text('Change Date'),
+                    onPressed: () async {
+                      final pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (pickedDate != null) {
+                        setState(() {
+                          _selectedDate = pickedDate;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -105,7 +131,7 @@ class _EntryEditPageState extends State<EntryEditPage> {
     final analysis = _sentiment.analysis('$title $content');
     final sentimentScore = analysis['score'] ?? 0;
     final entry = DiaryEntry(
-      id: widget.entry?.id, // Preserve ID if editing
+      id: widget.entry!.id,
       title: title,
       content: content,
       date: _selectedDate,

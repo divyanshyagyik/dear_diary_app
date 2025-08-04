@@ -65,17 +65,23 @@ class DiaryController extends GetxController {
       await collection.doc(entry.id).update(entry.toFirestore());
     }
   }
-
   Future<void> deleteEntry(String id) async {
-    final userId = _authController.firebaseUser.value?.uid;
-    if (userId == null) throw Exception("User not logged in");
+    try {
+      final userId = _authController.firebaseUser.value?.uid;
+      if (userId == null) throw Exception("User not logged in");
 
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('entries')
-        .doc(id)
-        .delete();
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('entries')
+          .doc(id)
+          .delete();
+
+      entries.removeWhere((entry) => entry.id == id); // Immediate UI update
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to delete entry: ${e.toString()}');
+      rethrow;
+    }
   }
 
   @override
